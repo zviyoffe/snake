@@ -1,4 +1,5 @@
 """
+  יבצה שחנ
 Snake Eater
 Made with PyGame
 """
@@ -47,8 +48,16 @@ fps_controller = pygame.time.Clock()
 
 
 # Game variables
-snake_pos = [100, 50]
-snake_body = [[100, 50], [100-10, 50], [100-(2*10), 50]]
+snake_pos = None
+snake_body = None
+
+def init():
+    global snake_pos
+    global snake_body
+    snake_pos = [100, 50]
+    snake_body = [[100, 50], [100-10, 50], [100-(2*10), 50]]
+
+init()
 
 food_pos = [random.randrange(1, (frame_size_x//10)) * 10, random.randrange(1, (frame_size_y//10)) * 10]
 food_spawn = True
@@ -62,7 +71,7 @@ score = 0
 # Game Over
 def game_over():
     my_font = pygame.font.SysFont('times new roman', 90)
-    game_over_surface = my_font.render('YOU DIED', True, red)
+    game_over_surface = my_font.render('YOU STILL ALIVE!', True, red)
     game_over_rect = game_over_surface.get_rect()
     game_over_rect.midtop = (frame_size_x/2, frame_size_y/4)
     game_window.fill(black)
@@ -70,8 +79,11 @@ def game_over():
     show_score(0, red, 'times', 20)
     pygame.display.flip()
     time.sleep(3)
-    pygame.quit()
-    sys.exit()
+#    game_window.fill(black)
+#    pygame.display.flip()
+    init()
+#    pygame.quit()
+#    sys.exit()
 
 
 # Score
@@ -86,9 +98,12 @@ def show_score(choice, color, font, size):
     game_window.blit(score_surface, score_rect)
     # pygame.display.flip()
 
+_sleep = 0
+_change_to_save = 'RIGHT'
 
 # Main logic
 while True:
+    import time
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -107,8 +122,24 @@ while True:
             # Esc -> Create event to quit the game
             if event.key == pygame.K_ESCAPE:
                 pygame.event.post(pygame.event.Event(pygame.QUIT))
+            if event.key == ord('b'):
+                _change_to_save = change_to
+                change_to = 'BREAK'
 
-    # Making sure the snake cannot move in the opposite direction instantaneously
+            if event.key == ord('+'):
+                _sleep = _sleep + 0.05
+   
+            if event.key == ord('-'):
+                _sleep = _sleep - 0.05
+                
+                
+            if _sleep < 0:
+                _sleep = 0
+            if _sleep > 5:
+                _sleep = 5
+   
+
+   # Making sure the snake cannot move in the opposite direction instantaneously
     if change_to == 'UP' and direction != 'DOWN':
         direction = 'UP'
     if change_to == 'DOWN' and direction != 'UP':
@@ -117,6 +148,11 @@ while True:
         direction = 'LEFT'
     if change_to == 'RIGHT' and direction != 'LEFT':
         direction = 'RIGHT'
+
+    if change_to == 'BREAK':
+        import pdb
+        pdb.set_trace()
+        change_to = _change_to_save
 
     # Moving the snake
     if direction == 'UP':
@@ -154,10 +190,19 @@ while True:
 
     # Game Over conditions
     # Getting out of bounds
-    if snake_pos[0] < 0 or snake_pos[0] > frame_size_x-10:
-        game_over()
-    if snake_pos[1] < 0 or snake_pos[1] > frame_size_y-10:
-        game_over()
+    if snake_pos[0] < 0:
+        snake_pos[0] = frame_size_x-10
+    
+    if snake_pos[0] > frame_size_x-10:
+        snake_pos[0] = 0
+    
+    if snake_pos[1] > frame_size_y-10:
+        snake_pos[1] = 0
+    if snake_pos[1] <= 0:
+        snake_pos[1] = frame_size_y-10
+
+#    if snake_pos[1] < 0 or snake_pos[1] > frame_size_y-10:
+#        game_over()
     # Touching the snake body
     for block in snake_body[1:]:
         if snake_pos[0] == block[0] and snake_pos[1] == block[1]:
@@ -168,3 +213,4 @@ while True:
     pygame.display.update()
     # Refresh rate
     fps_controller.tick(difficulty)
+    time.sleep(_sleep)
